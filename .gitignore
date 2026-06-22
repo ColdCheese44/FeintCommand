@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+artifacts/
+
+# Visual Studio and Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test and coverage output
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Local launcher data and logs
+launcher.json
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini

@@ -18,6 +18,7 @@ coverage/
 *.coveragexml
 
 # Local launcher data and logs
+.env
 launcher.json
 *.log
 

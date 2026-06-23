@@ -7,6 +7,25 @@ public sealed class EnvironmentService
 {
     public const string DiscordServerIdKey = "FEINTCOMMAND_SERVER_ID";
 
+    public string? GetValue(string key)
+    {
+        string? processValue = Environment.GetEnvironmentVariable(key);
+        if (!string.IsNullOrWhiteSpace(processValue))
+        {
+            return processValue.Trim();
+        }
+
+        string preferredPath = GetPreferredEnvironmentPath();
+        string? environmentFilePath = GetCandidateEnvironmentPaths(preferredPath).FirstOrDefault(File.Exists);
+        if (environmentFilePath is null)
+        {
+            return null;
+        }
+
+        Dictionary<string, string> fileValues = ReadEnvironmentFile(environmentFilePath);
+        return fileValues.TryGetValue(key, out string? fileValue) ? fileValue.Trim() : null;
+    }
+
     public EnvironmentSettings Load()
     {
         string preferredPath = GetPreferredEnvironmentPath();

@@ -58,7 +58,7 @@ public sealed class ProcessLauncher
     {
         if (Uri.TryCreate(command, UriKind.Absolute, out Uri? uri) && uri.Scheme is "http" or "https")
         {
-            return new ProcessStartInfo(command) { UseShellExecute = true };
+            return BrowserLauncher.CreateStartInfo(command);
         }
 
         if (!File.Exists(command) && !Directory.Exists(command))

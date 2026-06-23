@@ -12,6 +12,7 @@ FeintCommand is the Windows command center for FeintAI applications. The current
 - Working-directory and command-argument support
 - Running-process status for processes started by the current session
 - Persistent dark, light, and system themes
+- Browser-opening actions prefer full-screen Brave by default
 - Local `.env` discovery for FeintCommand machine settings
 - Discord command-center summary card and channel blueprint
 - JSON configuration stored outside the installation directory
@@ -61,9 +62,37 @@ FeintCommand can read local-only values from a `.env` file. The real `.env` file
 
 ```text
 FEINTCOMMAND_SERVER_ID=your-discord-server-id
+FEINT_BROWSER=brave
+FEINT_BROWSER_MODE=fullscreen
+FEINT_BROWSER_PATH=
 ```
 
 The app checks the process environment first, then the nearest `.env` file it can find from the app/project directory, then the FeintCommand local app-data folder. Press **Refresh status** after editing `.env`.
+
+## Browser behavior
+
+Any FeintCommand action that opens an HTTP or HTTPS URL prefers Brave in a new full-screen window. That includes URL launch targets and the Discord command-center button. If Brave is not installed or cannot be found, FeintCommand falls back to the default Windows browser and writes a warning to:
+
+```text
+%LOCALAPPDATA%\FeintAI\FeintCommand\browser.log
+```
+
+Supported environment variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `FEINT_BROWSER_PATH` | Optional explicit path to a browser executable. This is checked first. |
+| `FEINT_BROWSER` | Browser preference. Defaults to `brave`; use `default` to use the Windows default browser. |
+| `FEINT_BROWSER_MODE` | Window mode for browser launches: `fullscreen`, `maximized`, `normal`, or `kiosk`. Defaults to `fullscreen`. |
+
+Example PowerShell override:
+
+```powershell
+$env:FEINT_BROWSER_MODE = "fullscreen"
+$env:FEINT_BROWSER_PATH = "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+```
+
+FeintCommand does not use kiosk mode unless `FEINT_BROWSER_MODE=kiosk` is set explicitly.
 
 ## Discord command center
 

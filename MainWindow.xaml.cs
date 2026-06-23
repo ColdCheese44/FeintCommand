@@ -322,8 +322,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
-        Process.Start(new ProcessStartInfo(DiscordServerUrl) { UseShellExecute = true });
-        ShowStatus("Opened the FeintCommand Discord server.");
+        if (BrowserLauncher.OpenUrl(DiscordServerUrl))
+        {
+            ShowStatus("Opened the FeintCommand Discord server.");
+        }
+        else
+        {
+            ShowStatus("Could not open the FeintCommand Discord server.", true);
+        }
     }
 
     private void CopyDiscordServerId_Click(object sender, RoutedEventArgs e)

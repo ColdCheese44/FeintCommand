@@ -111,7 +111,7 @@
                             </Grid>
 
                             <Border Style="{StaticResource CardStyle}" Margin="0,24,0,28" Padding="22,18">
-                                <UniformGrid Columns="4">
+                                <UniformGrid Columns="5">
                                     <StackPanel>
                                         <TextBlock Text="PROGRAMS" Style="{StaticResource SectionLabel}" Foreground="{DynamicResource TextMutedBrush}" />
                                         <TextBlock Text="{Binding ProgramCount}" FontSize="20" FontWeight="Bold" Margin="0,5,0,0" />
@@ -128,7 +128,81 @@
                                         <TextBlock Text="LAUNCH TARGETS" Style="{StaticResource SectionLabel}" Foreground="{DynamicResource TextMutedBrush}" />
                                         <TextBlock Text="{Binding TargetCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" Margin="0,5,0,0" />
                                     </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="DISCORD" Style="{StaticResource SectionLabel}" Foreground="{DynamicResource TextMutedBrush}" />
+                                        <TextBlock Text="{Binding DiscordServerStatus}" FontSize="20" FontWeight="Bold" Margin="0,5,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasLikelyDiscordServerId}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
                                 </UniformGrid>
+                            </Border>
+
+                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,28" Padding="22">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="DISCORD COMMAND CENTER" Style="{StaticResource SectionLabel}" FontSize="13" />
+                                            <TextBlock Text="Brief platform-level summaries live here; each Feint app can keep the deep work in its own server." Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,7,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                            <Button Content="Open server" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0" Click="OpenDiscordServer_Click" IsEnabled="{Binding HasDiscordServerId}" />
+                                            <Button Content="Copy server ID" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0" Click="CopyDiscordServerId_Click" IsEnabled="{Binding HasDiscordServerId}" />
+                                            <Button Content="Copy blueprint" Style="{StaticResource SecondaryButton}" Click="CopyChannelBlueprint_Click" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <UniformGrid Grid.Row="1" Columns="3" Margin="0,20,0,18">
+                                        <StackPanel Margin="0,0,12,0">
+                                            <TextBlock Text="SERVER ID" Style="{StaticResource SectionLabel}" Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock Text="{Binding DiscordServerId}" FontFamily="Cascadia Mono, Consolas" FontSize="13" FontWeight="SemiBold" Margin="0,5,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <StackPanel Margin="12,0">
+                                            <TextBlock Text="SOURCE" Style="{StaticResource SectionLabel}" Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock Text="{Binding DiscordServerIdSource}" FontSize="13" FontWeight="SemiBold" Margin="0,5,0,0" />
+                                        </StackPanel>
+                                        <StackPanel Margin="12,0,0,0">
+                                            <TextBlock Text="LINK" Style="{StaticResource SectionLabel}" Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock Text="{Binding DiscordServerUrl}" Foreground="{DynamicResource AccentBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="12" Margin="0,5,0,0" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </UniformGrid>
+
+                                    <ItemsControl Grid.Row="2" ItemsSource="{Binding CommandCenterChannels}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource StrokeBrush}" BorderThickness="1" CornerRadius="7" Padding="12,10" Margin="0,0,0,8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="140" />
+                                                            <ColumnDefinition Width="170" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding Category}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" FontWeight="SemiBold" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}" Foreground="{DynamicResource AccentBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="12" />
+                                                        <TextBlock Grid.Column="2" Text="{Binding Purpose}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
                             </Border>
 
                             <Grid Margin="0,0,0,14">
@@ -310,6 +384,22 @@
                                     <StackPanel Orientation="Horizontal">
                                         <Button Content="Open launcher.json" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Click="OpenConfiguration_Click" />
                                         <Button Content="Open containing folder" Style="{StaticResource SecondaryButton}" Click="OpenConfigFolder_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource CardStyle}" Padding="22" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Local environment" FontSize="16" FontWeight="SemiBold" />
+                                    <TextBlock Text="FeintCommand reads local-only values from .env. Keep this file ignored so machine and Discord IDs stay out of commits." Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,5,0,12" />
+                                    <TextBlock Text="Loaded file" Style="{StaticResource SectionLabel}" Foreground="{DynamicResource TextMutedBrush}" />
+                                    <TextBlock Text="{Binding EnvironmentFilePath}" FontFamily="Cascadia Mono, Consolas" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,5,0,12" TextWrapping="Wrap" />
+                                    <TextBlock Text="Preferred path" Style="{StaticResource SectionLabel}" Foreground="{DynamicResource TextMutedBrush}" />
+                                    <TextBlock Text="{Binding PreferredEnvironmentFilePath}" FontFamily="Cascadia Mono, Consolas" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,5,0,16" TextWrapping="Wrap" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Open .env" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Click="OpenEnvironmentFile_Click" />
+                                        <Button Content="Copy server ID" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Click="CopyDiscordServerId_Click" IsEnabled="{Binding HasDiscordServerId}" />
+                                        <Button Content="Open Discord server" Style="{StaticResource SecondaryButton}" Click="OpenDiscordServer_Click" IsEnabled="{Binding HasDiscordServerId}" />
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

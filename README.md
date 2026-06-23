@@ -12,6 +12,8 @@ FeintCommand is the Windows command center for FeintAI applications. The current
 - Working-directory and command-argument support
 - Running-process status for processes started by the current session
 - Persistent dark, light, and system themes
+- Local `.env` discovery for FeintCommand machine settings
+- Discord command-center summary card and channel blueprint
 - JSON configuration stored outside the installation directory
 - Keyboard shortcuts and accessible control names
 
@@ -52,6 +54,36 @@ The configuration is saved to:
 ```
 
 The launcher writes configuration changes atomically. If the JSON is invalid, it preserves the invalid file with a timestamped backup and restores starter profiles.
+
+## Local environment
+
+FeintCommand can read local-only values from a `.env` file. The real `.env` file is intentionally ignored by Git; copy `.env.example` when setting up another machine.
+
+```text
+FEINTCOMMAND_SERVER_ID=your-discord-server-id
+```
+
+The app checks the process environment first, then the nearest `.env` file it can find from the app/project directory, then the FeintCommand local app-data folder. Press **Refresh status** after editing `.env`.
+
+## Discord command center
+
+The dashboard includes a Discord command-center card for the FeintCommand server. It is designed for brief platform-level summaries because each FeintAI program can keep detailed work in its own server.
+
+Recommended starter channels:
+
+| Category | Channel | Purpose |
+| --- | --- | --- |
+| FeintCommand | `#command-center` | Pinned overview, active priorities, and operator shortcuts |
+| FeintCommand | `#announcements` | Major FeintAI platform notices and release timing |
+| FeintCommand | `#status-rollups` | Brief cross-app health summaries from each Feint program |
+| FeintCommand | `#release-notes` | Short changelogs for FeintCommand and connected apps |
+| FeintCommand | `#roadmap` | Near-term launcher, automation, and standalone-hosting plans |
+| FeintCommand | `#incidents` | Cross-platform outages, degraded services, and recovery notes |
+| FeintSignal | `#signal-summary` | Brief FeintSignal intelligence summaries and handoffs |
+| FeintSupplyCo | `#supplyco-summary` | Brief supply, inventory, and operations rollups |
+| FeintTrade | `#trade-summary` | Brief trading workspace status and market-operation notes |
+| FeintAI Network | `#app-directory` | Links to each Feint app server, repo, docs, and dashboard |
+| FeintAI Network | `#support-requests` | Cross-app requests that do not belong inside one product server |
 
 ## Project structure
 

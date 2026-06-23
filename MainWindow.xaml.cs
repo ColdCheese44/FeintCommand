@@ -17,9 +17,11 @@ namespace FeintCommand;
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
     private readonly ConfigurationService _configurationService = new();
+    private readonly EnvironmentService _environmentService = new();
     private readonly ProcessLauncher _processLauncher = new();
     private readonly DispatcherTimer _statusTimer;
     private LauncherConfiguration _configuration;
+    private EnvironmentSettings _environmentSettings;
     private string _selectedTheme;
     private string _statusMessage = "Ready.";
     private bool _isInitialized;
@@ -27,15 +29,26 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     public MainWindow()
     {
         _configuration = _configurationService.Load();
+        _environmentSettings = _environmentService.Load();
         _selectedTheme = ThemeService.Options.Contains(_configuration.Theme) ? _configuration.Theme : "System";
         ThemeService.Apply(_selectedTheme);
 
         Programs = new ObservableCollection<FeintProgram>(_configuration.Programs);
+        CommandCenterChannels = new ObservableCollection<CommandCenterChannel>(CreateCommandCenterChannels());
         Activities = [];
         InitializeComponent();
         DataContext = this;
 
         AddActivity("FeintCommand ready.");
+        if (_environmentSettings.HasDiscordServerId)
+        {
+            AddActivity("Discord command center linked.");
+        }
+        else
+        {
+            AddActivity("Add FEINTCOMMAND_SERVER_ID to .env to link Discord.");
+        }
+
         int setupCount = Programs.Count(program => !program.IsConfigured);
         if (setupCount > 0)
         {
@@ -52,11 +65,31 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public ObservableCollection<FeintProgram> Programs { get; }
 
+    public ObservableCollection<CommandCenterChannel> CommandCenterChannels { get; }
+
     public ObservableCollection<ActivityEntry> Activities { get; }
 
     public string[] ThemeOptions => ThemeService.Options;
 
     public string ConfigurationPath => _configurationService.ConfigurationPath;
+
+    public string EnvironmentFilePath => _environmentSettings.EnvironmentFileDisplay;
+
+    public string PreferredEnvironmentFilePath => _environmentSettings.PreferredEnvironmentFilePath;
+
+    public string DiscordServerId => _environmentSettings.DiscordServerIdDisplay;
+
+    public string DiscordServerIdSource => _environmentSettings.DiscordServerIdSource;
+
+    public string DiscordServerStatus => _environmentSettings.DiscordStatusText;
+
+    public string DiscordServerUrl => _environmentSettings.DiscordServerUrl;
+
+    public bool HasDiscordServerId => _environmentSettings.HasDiscordServerId;
+
+    public bool HasLikelyDiscordServerId => _environmentSettings.HasLikelyDiscordServerId;
+
+    public bool HasEnvironmentFile => _environmentSettings.HasEnvironmentFile;
 
     public int ProgramCount => Programs.Count;
 
@@ -260,6 +293,15 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         ShowStatus("Opened launcher.json.");
     }
 
+    private void OpenEnvironmentFile_Click(object sender, RoutedEventArgs e)
+    {
+        string path = _environmentSettings.HasEnvironmentFile
+            ? _environmentSettings.EnvironmentFilePath!
+            : _environmentSettings.PreferredEnvironmentFilePath;
+        Process.Start(new ProcessStartInfo("notepad.exe", $"\"{path}\"") { UseShellExecute = true });
+        ShowStatus(_environmentSettings.HasEnvironmentFile ? "Opened .env." : "Opened the preferred .env path.");
+    }
+
     private void OpenProjectFolder_Click(object sender, RoutedEventArgs e)
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
@@ -270,6 +312,39 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         ProcessLauncher.OpenFolder(directory?.FullName ?? AppContext.BaseDirectory);
         ShowStatus("Opened the FeintCommand project folder.");
+    }
+
+    private void OpenDiscordServer_Click(object sender, RoutedEventArgs e)
+    {
+        if (!HasDiscordServerId)
+        {
+            ShowStatus($"Add {EnvironmentService.DiscordServerIdKey} to .env first.", true);
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo(DiscordServerUrl) { UseShellExecute = true });
+        ShowStatus("Opened the FeintCommand Discord server.");
+    }
+
+    private void CopyDiscordServerId_Click(object sender, RoutedEventArgs e)
+    {
+        if (!HasDiscordServerId)
+        {
+            ShowStatus($"No {EnvironmentService.DiscordServerIdKey} value is configured.", true);
+            return;
+        }
+
+        Clipboard.SetText(_environmentSettings.DiscordServerId);
+        ShowStatus("Copied Discord server ID.");
+    }
+
+    private void CopyChannelBlueprint_Click(object sender, RoutedEventArgs e)
+    {
+        string blueprint = string.Join(
+            Environment.NewLine,
+            CommandCenterChannels.Select(channel => $"{channel.Category} / #{channel.Name} - {channel.Purpose}"));
+        Clipboard.SetText(blueprint);
+        ShowStatus("Copied Discord channel blueprint.");
     }
 
     private void ResetDefaults_Click(object sender, RoutedEventArgs e)
@@ -313,6 +388,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
+        RefreshEnvironmentSettings(false);
         RefreshStatus();
         AddActivity("Refreshed launcher status.");
     }
@@ -333,6 +409,25 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (showMessage)
         {
             ShowStatus($"Ready. {ConfiguredCount} of {ProgramCount} programs configured.");
+        }
+    }
+
+    private void RefreshEnvironmentSettings(bool showMessage = true)
+    {
+        _environmentSettings = _environmentService.Load();
+        OnPropertyChanged(nameof(EnvironmentFilePath));
+        OnPropertyChanged(nameof(PreferredEnvironmentFilePath));
+        OnPropertyChanged(nameof(DiscordServerId));
+        OnPropertyChanged(nameof(DiscordServerIdSource));
+        OnPropertyChanged(nameof(DiscordServerStatus));
+        OnPropertyChanged(nameof(DiscordServerUrl));
+        OnPropertyChanged(nameof(HasDiscordServerId));
+        OnPropertyChanged(nameof(HasLikelyDiscordServerId));
+        OnPropertyChanged(nameof(HasEnvironmentFile));
+
+        if (showMessage)
+        {
+            ShowStatus("Environment settings refreshed.");
         }
     }
 
@@ -417,6 +512,76 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    private static IEnumerable<CommandCenterChannel> CreateCommandCenterChannels() =>
+    [
+        new CommandCenterChannel
+        {
+            Category = "FeintCommand",
+            Name = "command-center",
+            Purpose = "Pinned overview, active priorities, and operator shortcuts.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintCommand",
+            Name = "announcements",
+            Purpose = "Major FeintAI platform notices and release timing.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintCommand",
+            Name = "status-rollups",
+            Purpose = "Brief cross-app health summaries from each Feint program.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintCommand",
+            Name = "release-notes",
+            Purpose = "Short changelogs for FeintCommand and connected apps.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintCommand",
+            Name = "roadmap",
+            Purpose = "Near-term launcher, automation, and standalone-hosting plans.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintCommand",
+            Name = "incidents",
+            Purpose = "Cross-platform outages, degraded services, and recovery notes.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintSignal",
+            Name = "signal-summary",
+            Purpose = "Brief FeintSignal intelligence summaries and handoffs.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintSupplyCo",
+            Name = "supplyco-summary",
+            Purpose = "Brief supply, inventory, and operations rollups.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintTrade",
+            Name = "trade-summary",
+            Purpose = "Brief trading workspace status and market-operation notes.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintAI Network",
+            Name = "app-directory",
+            Purpose = "Links to each Feint app server, repo, docs, and dashboard.",
+        },
+        new CommandCenterChannel
+        {
+            Category = "FeintAI Network",
+            Name = "support-requests",
+            Purpose = "Cross-app requests that do not belong inside one product server.",
+        },
+    ];
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr windowHandle, int attribute, ref int value, int size);
